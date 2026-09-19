@@ -41,6 +41,9 @@ class BookmarkIcon(Widget):
   PEEK_THRESHOLD = 50  # If icon peeks out this much, snap it fully visible
   FULL_VISIBLE_OFFSET = 200  # How far onscreen when fully visible
   HIDDEN_OFFSET = -50  # How far offscreen when hidden
+  REPORT_WIDTH = 220
+  REPORT_HEIGHT = 72
+  REPORT_MARGIN = 24
 
   def __init__(self, bookmark_callback):
     super().__init__()
@@ -56,6 +59,7 @@ class BookmarkIcon(Widget):
     self._is_swiping = False
     self._is_swiping_left: bool = False
     self._triggered_time: float = 0.0
+    self._report_rect = rl.Rectangle(0, 0, self.REPORT_WIDTH, self.REPORT_HEIGHT)
 
   def is_swiping_left(self) -> bool:
     """Check if currently swiping left (for scroller to disable)."""
@@ -87,6 +91,14 @@ class BookmarkIcon(Widget):
 
   def _handle_mouse_event(self, mouse_event: MouseEvent):
     if not ui_state.started:
+      return
+
+    if mouse_event.left_released and rl.check_collision_point_rec(mouse_event.pos, self._report_rect):
+      self._bookmark_callback()
+      self._state = BookmarkState.TRIGGERED
+      self._triggered_time = rl.get_time()
+      self._is_swiping = False
+      self._is_swiping_left = False
       return
 
     if mouse_event.left_pressed:
@@ -122,7 +134,18 @@ class BookmarkIcon(Widget):
         self._is_swiping_left = False
 
   def _render(self, _):
-    """Render the bookmark icon."""
+    """Render the bookmark icon and explicit developer report control."""
+    self._report_rect = rl.Rectangle(
+      self.rect.x + self.rect.width - self.REPORT_WIDTH - self.REPORT_MARGIN,
+      self.rect.y + self.REPORT_MARGIN,
+      self.REPORT_WIDTH,
+      self.REPORT_HEIGHT,
+    )
+    report_color = rl.Color(190, 45, 55, 235) if ui_state.started else rl.Color(90, 90, 90, 180)
+    rl.draw_rectangle_rounded(self._report_rect, 0.2, 8, report_color)
+    font = gui_app.font(FontWeight.SEMI_BOLD)
+    rl.draw_text_ex(font, "REPORT", rl.Vector2(self._report_rect.x + 48, self._report_rect.y + 20), 28, 0, rl.WHITE)
+
     if self._offset_filter.x > 0:
       icon_x = self.rect.x + self.rect.width - round(self._offset_filter.x)
       icon_y = self.rect.y + (self.rect.height - self._icon.height) / 2  # Vertically centered
