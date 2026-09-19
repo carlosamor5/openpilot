@@ -111,8 +111,14 @@ class MainLayout(Widget):
     self.open_settings(PanelType.DEVICE)
 
   def _on_bookmark_clicked(self):
+    # Preserve the existing flag/bookmark behavior while attaching the
+    # non-safety-critical Carlosthon report contract metadata.
     for service in ('bookmarkButton', 'userBookmark'):
       msg = messaging.new_message(service, valid=True)
+      bookmark = getattr(msg, service)
+      bookmark.contractVersion = 1
+      bookmark.audioRecordingEnabled = ui_state.params.get_bool("RecordAudio")
+      bookmark.source = "native_flag"
       self._pm.send(service, msg)
 
   def _on_onroad_clicked(self):

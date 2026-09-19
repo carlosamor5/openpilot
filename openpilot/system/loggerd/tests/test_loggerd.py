@@ -301,6 +301,26 @@ class TestLoggerd(OpenpilotTestCase):
       sent.clear_write_flag()
       assert sent.to_bytes() == m.as_builder().to_bytes()
 
+  def test_carlosthon_bookmark_contract(self):
+    pm = messaging.PubMaster(["userBookmark"])
+    managed_processes["loggerd"].start()
+    assert pm.wait_for_readers_to_update("userBookmark", timeout=5)
+
+    msg = messaging.new_message("userBookmark", valid=True)
+    msg.userBookmark.contractVersion = 1
+    msg.userBookmark.audioRecordingEnabled = True
+    msg.userBookmark.source = "native_flag"
+    pm.send("userBookmark", msg)
+    assert pm.wait_for_readers_to_update("userBookmark", timeout=5)
+    managed_processes["loggerd"].stop()
+
+    messages = list(LogReader(os.path.join(self._get_latest_log_dir(), "rlog.zst")))
+    bookmarks = [m.userBookmark for m in messages if m.which() == "userBookmark"]
+    assert bookmarks
+    assert bookmarks[-1].contractVersion == 1
+    assert bookmarks[-1].audioRecordingEnabled
+    assert bookmarks[-1].source == "native_flag"
+
   def test_preserving_bookmarked_segments(self):
     services = set(random.sample(CEREAL_SERVICES, random.randint(5, 10))) | {"userBookmark"}
     self._publish_random_messages(services)

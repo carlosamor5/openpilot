@@ -143,8 +143,14 @@ class MiciMainLayout(Scroller):
       self._scroll_to(self._home_layout)
 
   def _on_bookmark_clicked(self):
+    # Preserve the existing flag/bookmark behavior while attaching the
+    # non-safety-critical Carlosthon report contract metadata.
     for service in ('bookmarkButton', 'userBookmark'):
       msg = messaging.new_message(service, valid=True)
+      bookmark = getattr(msg, service)
+      bookmark.contractVersion = 1
+      bookmark.audioRecordingEnabled = ui_state.params.get_bool("RecordAudio")
+      bookmark.source = "native_flag"
       self._pm.send(service, msg)
 
   def _on_body_changed(self):

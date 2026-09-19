@@ -2493,6 +2493,10 @@ struct DebugAlert {
 }
 
 struct UserBookmark @0xfe346a9de48d9b50 {
+  # Carlosthon/report metadata. Existing bookmark readers may ignore these fields.
+  contractVersion @0 :UInt16 = 1;
+  audioRecordingEnabled @1 :Bool = false;
+  source @2 :Text = "native_flag";
 }
 
 struct SoundPressure @0xdc24138990726023 {
