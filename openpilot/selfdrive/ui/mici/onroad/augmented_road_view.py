@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pyray as rl
 from openpilot.cereal import log
@@ -41,9 +42,10 @@ class BookmarkIcon(Widget):
   PEEK_THRESHOLD = 50  # If icon peeks out this much, snap it fully visible
   FULL_VISIBLE_OFFSET = 200  # How far onscreen when fully visible
   HIDDEN_OFFSET = -50  # How far offscreen when hidden
-  REPORT_WIDTH = 220
-  REPORT_HEIGHT = 72
-  REPORT_MARGIN = 24
+  REPORT_RADIUS = 42
+  REPORT_MARGIN = 28
+  REPORT_COLOR = rl.Color(246, 196, 0, 245)
+  RECORDING_COLOR = rl.Color(210, 45, 55, 245)
 
   def __init__(self, bookmark_callback):
     super().__init__()
@@ -59,7 +61,9 @@ class BookmarkIcon(Widget):
     self._is_swiping = False
     self._is_swiping_left: bool = False
     self._triggered_time: float = 0.0
-    self._report_rect = rl.Rectangle(0, 0, self.REPORT_WIDTH, self.REPORT_HEIGHT)
+    self._report_rect = rl.Rectangle(0, 0, self.REPORT_RADIUS * 2, self.REPORT_RADIUS * 2)
+    self._recording = False
+    self._report_feedback_time = 0.0
 
   def is_swiping_left(self) -> bool:
     """Check if currently swiping left (for scroller to disable)."""
@@ -95,8 +99,13 @@ class BookmarkIcon(Widget):
 
     if mouse_event.left_released and rl.check_collision_point_rec(mouse_event.pos, self._report_rect):
       self._bookmark_callback()
+      self._interacting = True  # consume this tap so CameraView does not navigate home
+      self._recording = not self._recording
+      self._report_feedback_time = rl.get_time()
       self._state = BookmarkState.TRIGGERED
       self._triggered_time = rl.get_time()
+      # TODO(Carlosthon): play a short start/stop acknowledgement sound here.
+      # The current audio source remains standard RecordAudio/rawAudioData.
       self._is_swiping = False
       self._is_swiping_left = False
       return
@@ -134,17 +143,27 @@ class BookmarkIcon(Widget):
         self._is_swiping_left = False
 
   def _render(self, _):
-    """Render the bookmark icon and explicit developer report control."""
+    """Render the compact REPORT control and existing bookmark icon."""
+    center_x = self.rect.x + self.rect.width - self.REPORT_MARGIN - self.REPORT_RADIUS
+    center_y = self.rect.y + self.REPORT_MARGIN + self.REPORT_RADIUS
     self._report_rect = rl.Rectangle(
-      self.rect.x + self.rect.width - self.REPORT_WIDTH - self.REPORT_MARGIN,
-      self.rect.y + self.REPORT_MARGIN,
-      self.REPORT_WIDTH,
-      self.REPORT_HEIGHT,
+      center_x - self.REPORT_RADIUS,
+      center_y - self.REPORT_RADIUS,
+      self.REPORT_RADIUS * 2,
+      self.REPORT_RADIUS * 2,
     )
-    report_color = rl.Color(190, 45, 55, 235) if ui_state.started else rl.Color(90, 90, 90, 180)
-    rl.draw_rectangle_rounded(self._report_rect, 0.2, 8, report_color)
-    font = gui_app.font(FontWeight.SEMI_BOLD)
-    rl.draw_text_ex(font, "REPORT", rl.Vector2(self._report_rect.x + 48, self._report_rect.y + 20), 28, 0, rl.WHITE)
+
+    is_feedback = rl.get_time() - self._report_feedback_time < 0.25
+    radius = self.REPORT_RADIUS + (8 * math.sin((rl.get_time() - self._report_feedback_time) * math.pi * 4) if is_feedback else 0)
+    color = self.RECORDING_COLOR if self._recording else self.REPORT_COLOR
+    if not ui_state.started:
+      color = rl.Color(90, 90, 90, 180)
+    rl.draw_circle(int(center_x), int(center_y), radius, color)
+    if self._recording:
+      rl.draw_circle(int(center_x), int(center_y), 10, rl.WHITE)
+    else:
+      font = gui_app.font(FontWeight.SEMI_BOLD)
+      rl.draw_text_ex(font, "R", rl.Vector2(center_x - 12, center_y - 18), 30, 0, rl.BLACK)
 
     if self._offset_filter.x > 0:
       icon_x = self.rect.x + self.rect.width - round(self._offset_filter.x)
