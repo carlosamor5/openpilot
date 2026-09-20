@@ -101,6 +101,20 @@ class Uploader:
       if any(name.endswith(".lock") for name in names):
         continue
 
+      report_dir = os.path.join(path, "report_audio")
+      if self.params.get_bool("UploadReportAudio") and os.path.isdir(report_dir):
+        for name in sorted(os.listdir(report_dir)):
+          if not name.endswith(".wav"):
+            continue
+          key = os.path.join(logdir, "report_audio", name)
+          fn = os.path.join(report_dir, name)
+          try:
+            if getxattr(fn, UPLOAD_ATTR_NAME) == UPLOAD_ATTR_VALUE:
+              continue
+          except OSError:
+            continue
+          yield name, key, fn
+
       for name in sorted(names, key=lambda n: self.immediate_priority.get(n, 1000)):
         key = os.path.join(logdir, name)
         fn = os.path.join(path, name)
@@ -125,6 +139,7 @@ class Uploader:
             continue
 
         yield name, key, fn
+
 
   def next_file_to_upload(self, metered: bool) -> tuple[str, str, str] | None:
     upload_files = list(self.list_upload_files(metered))

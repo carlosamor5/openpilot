@@ -21556,6 +21556,10 @@ public:
   inline bool hasSource() const;
   inline  ::capnp::Text::Reader getSource() const;
 
+  inline bool getRecordingActive() const;
+
+  inline bool getRecordingCommand() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -21596,6 +21600,12 @@ public:
   inline  ::capnp::Text::Builder initSource(unsigned int size);
   inline void adoptSource(::capnp::Orphan< ::capnp::Text>&& value);
   inline ::capnp::Orphan< ::capnp::Text> disownSource();
+
+  inline bool getRecordingActive();
+  inline void setRecordingActive(bool value);
+
+  inline bool getRecordingCommand();
+  inline void setRecordingCommand(bool value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -50109,12 +50119,12 @@ inline bool UserBookmark::Builder::hasSource() {
 inline  ::capnp::Text::Reader UserBookmark::Reader::getSource() const {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS),
-        ::capnp::schemas::bp_fe346a9de48d9b50 + 65, 11);
+        ::capnp::schemas::bp_fe346a9de48d9b50 + 79, 11);
 }
 inline  ::capnp::Text::Builder UserBookmark::Builder::getSource() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS),
-        ::capnp::schemas::bp_fe346a9de48d9b50 + 65, 11);
+        ::capnp::schemas::bp_fe346a9de48d9b50 + 79, 11);
 }
 inline void UserBookmark::Builder::setSource( ::capnp::Text::Reader value) {
   ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
@@ -50132,6 +50142,34 @@ inline void UserBookmark::Builder::adoptSource(
 inline ::capnp::Orphan< ::capnp::Text> UserBookmark::Builder::disownSource() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool UserBookmark::Reader::getRecordingActive() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<17>() * ::capnp::ELEMENTS);
+}
+
+inline bool UserBookmark::Builder::getRecordingActive() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<17>() * ::capnp::ELEMENTS);
+}
+inline void UserBookmark::Builder::setRecordingActive(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<17>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool UserBookmark::Reader::getRecordingCommand() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<18>() * ::capnp::ELEMENTS);
+}
+
+inline bool UserBookmark::Builder::getRecordingCommand() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<18>() * ::capnp::ELEMENTS);
+}
+inline void UserBookmark::Builder::setRecordingCommand(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<18>() * ::capnp::ELEMENTS, value);
 }
 
 inline float SoundPressure::Reader::getSoundPressure() const {

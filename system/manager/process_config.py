@@ -77,6 +77,7 @@ procs = [
   PythonProcess("proclogd", "system.proclogd", only_onroad, enabled=platform.system() != "Darwin"),
   PythonProcess("journald", "system.journald", only_onroad, platform.system() != "Darwin"),
   PythonProcess("micd", "system.micd", iscar),
+  PythonProcess("report_audio_recorder", "selfdrive.report_audio_recorder", only_onroad),
   PythonProcess("timed", "system.timed", always_run, enabled=not PC),
 
   PythonProcess("modeld", "selfdrive.modeld.modeld", only_onroad),

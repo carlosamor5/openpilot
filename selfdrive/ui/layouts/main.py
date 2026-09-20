@@ -106,9 +106,16 @@ class MainLayout(Widget):
   def _on_settings_clicked(self):
     self.open_settings(PanelType.DEVICE)
 
-  def _on_bookmark_clicked(self):
+  def _on_bookmark_clicked(self, recording_active: bool | None = None):
     user_bookmark = messaging.new_message('bookmarkButton')
     user_bookmark.valid = True
+    bookmark = user_bookmark.bookmarkButton
+    bookmark.contractVersion = 1
+    bookmark.audioRecordingEnabled = ui_state.params.get_bool("RecordAudio")
+    bookmark.source = "native_flag"
+    if recording_active is not None:
+      bookmark.recordingActive = recording_active
+      bookmark.recordingCommand = True
     self._pm.send('bookmarkButton', user_bookmark)
 
   def _on_onroad_clicked(self):

@@ -41,15 +41,19 @@ class BookmarkIcon(Widget):
   PEEK_THRESHOLD = 50  # If icon peeks out this much, snap it fully visible
   FULL_VISIBLE_OFFSET = 200  # How far onscreen when fully visible
   HIDDEN_OFFSET = -50  # How far offscreen when hidden
-  REPORT_RADIUS = 42
+  # Compact visible control with a forgiving touch target.
+  REPORT_RADIUS = 28
+  REPORT_HITBOX_RADIUS = 36
   REPORT_MARGIN = 28
   REPORT_COLOR = rl.Color(246, 196, 0, 245)
   RECORDING_COLOR = rl.Color(210, 45, 55, 245)
+  REPORT_ICON_SIZE = 32
 
   def __init__(self, bookmark_callback):
     super().__init__()
     self._bookmark_callback = bookmark_callback
     self._icon = gui_app.texture("icons_mici/onroad/bookmark.png", 180, 180)
+    self._microphone_icon = gui_app.texture("icons_mici/microphone.png", self.REPORT_ICON_SIZE, self.REPORT_ICON_SIZE)
     self._offset_filter = BounceFilter(0.0, 0.1, 1 / gui_app.target_fps)
 
     # State
@@ -63,6 +67,10 @@ class BookmarkIcon(Widget):
     self._report_rect = rl.Rectangle(0, 0, self.REPORT_RADIUS * 2, self.REPORT_RADIUS * 2)
     self._recording = False
     self._report_feedback_time = 0.0
+
+  def _send_bookmark(self, recording_active: bool | None = None):
+    if self._bookmark_callback is not None:
+      self._bookmark_callback(recording_active)
 
   def is_swiping_left(self) -> bool:
     """Check if currently swiping left (for scroller to disable)."""
@@ -97,9 +105,9 @@ class BookmarkIcon(Widget):
       return
 
     if mouse_event.left_released and rl.check_collision_point_rec(mouse_event.pos, self._report_rect):
-      self._bookmark_callback()
-      self._interacting = True
       self._recording = not self._recording
+      self._send_bookmark(self._recording)
+      self._interacting = True
       self._report_feedback_time = rl.get_time()
       # TODO(Carlosthon): add a short start/stop acknowledgement sound.
       self._is_swiping = False
@@ -129,7 +137,7 @@ class BookmarkIcon(Widget):
         if swipe_distance > self.PEEK_THRESHOLD:
           self._state = BookmarkState.TRIGGERED
           self._triggered_time = rl.get_time()
-          self._bookmark_callback()
+          self._send_bookmark(False)
         else:
           # Otherwise, transition back to hidden
           self._state = BookmarkState.HIDDEN
@@ -142,19 +150,22 @@ class BookmarkIcon(Widget):
     """Render the compact REPORT control and existing bookmark icon."""
     center_x = self.rect.x + self.rect.width - self.REPORT_MARGIN - self.REPORT_RADIUS
     center_y = self.rect.y + self.REPORT_MARGIN + self.REPORT_RADIUS
-    self._report_rect = rl.Rectangle(center_x - self.REPORT_RADIUS, center_y - self.REPORT_RADIUS,
-                                     self.REPORT_RADIUS * 2, self.REPORT_RADIUS * 2)
+    self._report_rect = rl.Rectangle(center_x - self.REPORT_HITBOX_RADIUS, center_y - self.REPORT_HITBOX_RADIUS,
+                                     self.REPORT_HITBOX_RADIUS * 2, self.REPORT_HITBOX_RADIUS * 2)
     age = rl.get_time() - self._report_feedback_time
-    pulse = 8 * math.sin(age * math.pi * 4) if 0 <= age < 0.25 else 0
+    pulse = 5 * math.sin(age * math.pi * 4) if 0 <= age < 0.25 else 0
     color = self.RECORDING_COLOR if self._recording else self.REPORT_COLOR
     if not ui_state.started:
       color = rl.Color(90, 90, 90, 180)
     rl.draw_circle(int(center_x), int(center_y), self.REPORT_RADIUS + pulse, color)
     if self._recording:
-      rl.draw_circle(int(center_x), int(center_y), 10, rl.WHITE)
+      # Visual-only voice-like modulation; micd remains the sole microphone owner.
+      modulation = 1.0 + 0.16 * math.sin(rl.get_time() * 2 * math.pi * 11.0)
+      rl.draw_circle(int(center_x), int(center_y), 7.0 * modulation, rl.WHITE)
     else:
-      font = gui_app.font(FontWeight.SEMI_BOLD)
-      rl.draw_text_ex(font, "R", rl.Vector2(center_x - 12, center_y - 18), 30, 0, rl.BLACK)
+      icon_x = center_x - self.REPORT_ICON_SIZE / 2
+      icon_y = center_y - self.REPORT_ICON_SIZE / 2
+      rl.draw_texture_ex(self._microphone_icon, rl.Vector2(icon_x, icon_y), 0.0, 1.0, rl.BLACK)
 
     if self._offset_filter.x > 0:
       icon_x = self.rect.x + self.rect.width - round(self._offset_filter.x)
