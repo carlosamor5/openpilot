@@ -9,6 +9,7 @@ from openpilot.selfdrive.ui.onroad.driver_state import DriverStateRenderer
 from openpilot.selfdrive.ui.onroad.hud_renderer import HudRenderer
 from openpilot.selfdrive.ui.onroad.model_renderer import ModelRenderer
 from openpilot.selfdrive.ui.onroad.cameraview import CameraView
+from openpilot.selfdrive.ui.report_view import ReportView
 from openpilot.system.ui.lib.application import gui_app
 from openpilot.common.transformations.camera import DEVICE_CAMERAS, DeviceCameraConfig, view_frame_from_device_frame
 from openpilot.common.transformations.orientation import rot_from_euler
@@ -47,6 +48,7 @@ class AugmentedRoadView(CameraView):
     self._hud_renderer = HudRenderer()
     self.alert_renderer = AlertRenderer()
     self.driver_state_renderer = DriverStateRenderer()
+    self._report_view = ReportView()
 
   def _render(self, rect):
     # Only render when system is started to avoid invalid data access
@@ -78,11 +80,11 @@ class AugmentedRoadView(CameraView):
     # Render the base camera view
     super()._render(rect)
 
-    # Draw all UI overlays
+    # Minimal simulation overlay: keep the model trajectory and voice report control.
     self.model_renderer.render(self._content_rect)
-    self._hud_renderer.render(self._content_rect)
-    self.alert_renderer.render(self._content_rect)
-    self.driver_state_renderer.render(self._content_rect)
+
+    # Voice report control and transcript summary.
+    self._report_view.render(rect)
 
     # Custom UI extension point - add custom overlays here
     # Use self._content_rect for positioning within camera bounds
@@ -93,9 +95,12 @@ class AugmentedRoadView(CameraView):
     # Draw colored border based on driving state
     self._draw_border(rect)
 
-  def _handle_mouse_press(self, _):
+  def _handle_mouse_press(self, mouse_pos):
+    if self._report_view.handle_mouse(mouse_pos, self.rect):
+      return
     if not self._hud_renderer.user_interacting() and self._click_callback is not None:
       self._click_callback()
+
 
   def _handle_mouse_release(self, _):
     # We only call click callback on press if not interacting with HUD
