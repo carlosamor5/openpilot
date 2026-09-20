@@ -89,8 +89,10 @@ def main(args: argparse.Namespace) -> None:
     MainLayout(camera_stream=stream)
     device.set_override_interactive_timeout(99999)
 
-    replay_process = start_replay(args)
+    # Create publishers before replay so replay's blocked carState subscription
+    # never races the message namespace initialization.
     pm = messaging.PubMaster(["deviceState", "pandaStates", "driverStateV2", "selfdriveState", "carState"])
+    replay_process = start_replay(args)
     started_at = time.monotonic()
     print("Mici on-road harness started")
     print("The on-road camera page should appear after the startup transition.")
