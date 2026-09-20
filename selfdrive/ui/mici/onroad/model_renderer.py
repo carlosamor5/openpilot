@@ -137,10 +137,13 @@ class ModelRenderer(Widget):
         self._update_leads(radar_state, path_x_array)
       self._transform_dirty = False
 
-    # Draw elements (hide when disengaged)
+    # Keep the replay trajectory visible even while the simulated harness is
+    # disengaged. Lane lines and lead indicators remain hidden in this minimal
+    # UI, but the path is the primary visualization requested for the demo.
+    self._draw_path(sm)
+
     if ui_state.status != UIStatus.DISENGAGED:
       self._draw_lane_lines()
-      self._draw_path(sm)
 
     # if render_lead_indicator and radar_state:
     #   self._draw_lead_indicator()
