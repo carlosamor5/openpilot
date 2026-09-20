@@ -2,6 +2,7 @@ import pyray as rl
 import numpy as np
 import time
 import threading
+import os
 from collections.abc import Callable
 from enum import Enum
 from cereal import messaging, car, log
@@ -152,7 +153,9 @@ class UIState:
       self.light_sensor = -1
 
     # Update started state
-    self.started = self.sm["deviceState"].started and self.ignition
+    # Display-only desk mode is explicit and must never enable vehicle control.
+    display_only_demo = os.getenv("OPENPILOT_DISPLAY_ONLY_DEMO") == "1"
+    self.started = (self.sm["deviceState"].started or display_only_demo) and (self.ignition or display_only_demo)
 
     # Update body state
     if self.CP is not None and self.is_body != self.CP.notCar:
