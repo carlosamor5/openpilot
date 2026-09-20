@@ -2,12 +2,17 @@ import numpy as np
 import pyray as rl
 from cereal import log
 from msgq.visionipc import VisionStreamType
-from openpilot.selfdrive.ui import UI_BORDER_SIZE
+from openpilot.selfdrive.ui import UI_BORDER_SIZE as DEFAULT_UI_BORDER_SIZE
+
+# Minimal simulation border to maximize the replay video area.
+UI_BORDER_SIZE = 2
 from openpilot.selfdrive.ui.ui_state import ui_state, UIStatus
 from openpilot.selfdrive.ui.onroad.alert_renderer import AlertRenderer
 from openpilot.selfdrive.ui.onroad.driver_state import DriverStateRenderer
 from openpilot.selfdrive.ui.onroad.hud_renderer import HudRenderer
-from openpilot.selfdrive.ui.onroad.model_renderer import ModelRenderer
+# Use the Mici renderer, which is compatible with this replay's model stream
+# and preserves the visible trajectory overlay in the simulation.
+from openpilot.selfdrive.ui.mici.onroad.model_renderer import ModelRenderer
 from openpilot.selfdrive.ui.onroad.cameraview import CameraView
 from openpilot.selfdrive.ui.report_view import ReportView
 from openpilot.system.ui.lib.application import gui_app
@@ -107,12 +112,9 @@ class AugmentedRoadView(CameraView):
     pass
 
   def _draw_border(self, rect: rl.Rectangle):
-    rl.draw_rectangle_lines_ex(rect, UI_BORDER_SIZE, rl.BLACK)
-    border_roundness = 0.12
-    border_color = BORDER_COLORS.get(ui_state.status, BORDER_COLORS[UIStatus.DISENGAGED])
-    border_rect = rl.Rectangle(rect.x + UI_BORDER_SIZE, rect.y + UI_BORDER_SIZE,
-                               rect.width - 2 * UI_BORDER_SIZE, rect.height - 2 * UI_BORDER_SIZE)
-    rl.draw_rectangle_rounded_lines_ex(border_rect, border_roundness, 10, UI_BORDER_SIZE, border_color)
+     border_color = BORDER_COLORS.get(ui_state.status, BORDER_COLORS[UIStatus.DISENGAGED])
+     border_color = rl.Color(border_color.r, border_color.g, border_color.b, 128)
+     rl.draw_rectangle_rounded_lines_ex(rect, 0.04, 8, UI_BORDER_SIZE, border_color)
 
   def _switch_stream_if_needed(self, sm):
     if sm['selfdriveState'].experimentalMode and WIDE_CAM in self.available_streams:

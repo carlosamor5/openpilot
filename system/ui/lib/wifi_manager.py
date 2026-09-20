@@ -514,6 +514,10 @@ class WifiManager:
     try:
       device_paths = self._router_main.send_and_get_reply(new_method_call(self._nm, 'GetDevices')).body[0]
       for device_path in device_paths:
+        # WSLg/NetworkManager can expose a malformed placeholder entry.
+        # Ignore it instead of logging a traceback on every polling cycle.
+        if not isinstance(device_path, str) or not device_path.startswith('/'):
+          continue
         dev_addr = DBusAddress(device_path, bus_name=NM, interface=NM_DEVICE_IFACE)
         dev_type = self._router_main.send_and_get_reply(Properties(dev_addr).get('DeviceType')).body[0][1]
         if dev_type == adapter_type:

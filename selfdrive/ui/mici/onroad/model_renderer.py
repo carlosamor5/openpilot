@@ -325,8 +325,13 @@ class ModelRenderer(Widget):
       draw_polygon(self._rect, road_edge.projected_points + offset, color)
 
   def _draw_path(self, sm):
-    """Draw path with dynamic coloring based on mode and throttle state."""
+    """Draw the replay trajectory with the standard visible blue path."""
     if not self._path.projected_points.size:
+      return
+
+    path_pts = self._path.projected_points
+    if not self._experimental_mode:
+      draw_polygon(self._rect, path_pts, rl.Color(45, 150, 255, 210))
       return
 
     allow_throttle = sm['longitudinalPlan'].allowThrottle or not self._longitudinal_control
