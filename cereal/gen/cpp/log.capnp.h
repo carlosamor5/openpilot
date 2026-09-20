@@ -2981,7 +2981,7 @@ struct UserBookmark {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(fe346a9de48d9b50, 0, 0)
+    CAPNP_DECLARE_STRUCT_HEADER(fe346a9de48d9b50, 1, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -21549,6 +21549,13 @@ public:
   }
 #endif  // !CAPNP_LITE
 
+  inline  ::uint16_t getContractVersion() const;
+
+  inline bool getAudioRecordingEnabled() const;
+
+  inline bool hasSource() const;
+  inline  ::capnp::Text::Reader getSource() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -21576,6 +21583,19 @@ public:
 #if !CAPNP_LITE
   inline ::kj::StringTree toString() const { return asReader().toString(); }
 #endif  // !CAPNP_LITE
+
+  inline  ::uint16_t getContractVersion();
+  inline void setContractVersion( ::uint16_t value);
+
+  inline bool getAudioRecordingEnabled();
+  inline void setAudioRecordingEnabled(bool value);
+
+  inline bool hasSource();
+  inline  ::capnp::Text::Builder getSource();
+  inline void setSource( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initSource(unsigned int size);
+  inline void adoptSource(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownSource();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -50048,6 +50068,70 @@ inline void DebugAlert::Builder::adoptAlertText2(
 inline ::capnp::Orphan< ::capnp::Text> DebugAlert::Builder::disownAlertText2() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline  ::uint16_t UserBookmark::Reader::getContractVersion() const {
+  return _reader.getDataField< ::uint16_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1u);
+}
+
+inline  ::uint16_t UserBookmark::Builder::getContractVersion() {
+  return _builder.getDataField< ::uint16_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1u);
+}
+inline void UserBookmark::Builder::setContractVersion( ::uint16_t value) {
+  _builder.setDataField< ::uint16_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value, 1u);
+}
+
+inline bool UserBookmark::Reader::getAudioRecordingEnabled() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<16>() * ::capnp::ELEMENTS);
+}
+
+inline bool UserBookmark::Builder::getAudioRecordingEnabled() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<16>() * ::capnp::ELEMENTS);
+}
+inline void UserBookmark::Builder::setAudioRecordingEnabled(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<16>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool UserBookmark::Reader::hasSource() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool UserBookmark::Builder::hasSource() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader UserBookmark::Reader::getSource() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_fe346a9de48d9b50 + 65, 11);
+}
+inline  ::capnp::Text::Builder UserBookmark::Builder::getSource() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_fe346a9de48d9b50 + 65, 11);
+}
+inline void UserBookmark::Builder::setSource( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder UserBookmark::Builder::initSource(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void UserBookmark::Builder::adoptSource(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> UserBookmark::Builder::disownSource() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
 inline float SoundPressure::Reader::getSoundPressure() const {

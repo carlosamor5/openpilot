@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pyray as rl
 from cereal import car, log
@@ -40,6 +41,10 @@ class BookmarkIcon(Widget):
   PEEK_THRESHOLD = 50  # If icon peeks out this much, snap it fully visible
   FULL_VISIBLE_OFFSET = 200  # How far onscreen when fully visible
   HIDDEN_OFFSET = -50  # How far offscreen when hidden
+  REPORT_RADIUS = 42
+  REPORT_MARGIN = 28
+  REPORT_COLOR = rl.Color(246, 196, 0, 245)
+  RECORDING_COLOR = rl.Color(210, 45, 55, 245)
 
   def __init__(self, bookmark_callback):
     super().__init__()
@@ -55,6 +60,9 @@ class BookmarkIcon(Widget):
     self._is_swiping = False
     self._is_swiping_left: bool = False
     self._triggered_time: float = 0.0
+    self._report_rect = rl.Rectangle(0, 0, self.REPORT_RADIUS * 2, self.REPORT_RADIUS * 2)
+    self._recording = False
+    self._report_feedback_time = 0.0
 
   def is_swiping_left(self) -> bool:
     """Check if currently swiping left (for scroller to disable)."""
@@ -86,6 +94,16 @@ class BookmarkIcon(Widget):
 
   def _handle_mouse_event(self, mouse_event: MouseEvent):
     if not ui_state.started:
+      return
+
+    if mouse_event.left_released and rl.check_collision_point_rec(mouse_event.pos, self._report_rect):
+      self._bookmark_callback()
+      self._interacting = True
+      self._recording = not self._recording
+      self._report_feedback_time = rl.get_time()
+      # TODO(Carlosthon): add a short start/stop acknowledgement sound.
+      self._is_swiping = False
+      self._is_swiping_left = False
       return
 
     if mouse_event.left_pressed:
@@ -121,7 +139,23 @@ class BookmarkIcon(Widget):
         self._is_swiping_left = False
 
   def _render(self, _):
-    """Render the bookmark icon."""
+    """Render the compact REPORT control and existing bookmark icon."""
+    center_x = self.rect.x + self.rect.width - self.REPORT_MARGIN - self.REPORT_RADIUS
+    center_y = self.rect.y + self.REPORT_MARGIN + self.REPORT_RADIUS
+    self._report_rect = rl.Rectangle(center_x - self.REPORT_RADIUS, center_y - self.REPORT_RADIUS,
+                                     self.REPORT_RADIUS * 2, self.REPORT_RADIUS * 2)
+    age = rl.get_time() - self._report_feedback_time
+    pulse = 8 * math.sin(age * math.pi * 4) if 0 <= age < 0.25 else 0
+    color = self.RECORDING_COLOR if self._recording else self.REPORT_COLOR
+    if not ui_state.started:
+      color = rl.Color(90, 90, 90, 180)
+    rl.draw_circle(int(center_x), int(center_y), self.REPORT_RADIUS + pulse, color)
+    if self._recording:
+      rl.draw_circle(int(center_x), int(center_y), 10, rl.WHITE)
+    else:
+      font = gui_app.font(FontWeight.SEMI_BOLD)
+      rl.draw_text_ex(font, "R", rl.Vector2(center_x - 12, center_y - 18), 30, 0, rl.BLACK)
+
     if self._offset_filter.x > 0:
       icon_x = self.rect.x + self.rect.width - round(self._offset_filter.x)
       icon_y = self.rect.y + (self.rect.height - self._icon.height) / 2  # Vertically centered

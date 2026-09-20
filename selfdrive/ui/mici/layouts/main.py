@@ -142,6 +142,10 @@ class MiciMainLayout(Scroller):
   def _on_bookmark_clicked(self):
     user_bookmark = messaging.new_message('bookmarkButton')
     user_bookmark.valid = True
+    bookmark = user_bookmark.bookmarkButton
+    bookmark.contractVersion = 1
+    bookmark.audioRecordingEnabled = ui_state.params.get_bool("RecordAudio")
+    bookmark.source = "native_flag"
     self._pm.send('bookmarkButton', user_bookmark)
 
   def _on_body_changed(self):
